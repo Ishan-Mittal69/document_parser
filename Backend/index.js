@@ -1,5 +1,4 @@
 import dotenv from "dotenv";
-import fs from "fs/promises";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import express from "express";
 import cors from "cors";
@@ -10,7 +9,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Multer setup for file upload
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
@@ -38,7 +36,6 @@ const extractInfoFromText = (text) => {
     return extractedInfo;
 };
 
-// Asynchronous function to handle image processing and data extraction
 const extractInfo = async (imageBuffer) => {
     try {
         const genAI = new GoogleGenerativeAI(process.env.API_KEY);
@@ -61,7 +58,6 @@ const extractInfo = async (imageBuffer) => {
             }
         };
 
-        // Generate content by passing the prompt and image data
         const result = await model.generateContent([prompt, imageData]);
 
         // Parse the response from the model
@@ -77,10 +73,6 @@ const extractInfo = async (imageBuffer) => {
             console.log("parse error");
             return extractedInfo;
         }
-        // // Extract structured information (assuming result follows certain JSON-like format)
-        // const results = extractInfoFromText(responseText);
-        // console.log(results);
-        // return results;
 
     } catch (error) {
         console.error("Error in extractInfo function:", error);
@@ -95,13 +87,10 @@ app.post('/extract', upload.single('document'), async (req, res) => {
             return res.status(400).json({ error: 'No document provided' });
         }
 
-        // Pass the file buffer to the extractInfo function
         const results = await extractInfo(req.file.buffer);
 
         console.log(results);
         
-
-        // Validate results
         if (!Object.values(results).some(value => value !== null)) {
             return res.status(400).json({
                 error: 'Could not extract any information from the document'
@@ -132,5 +121,3 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
-
-export default app; // For testing purposes
